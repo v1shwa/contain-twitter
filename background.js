@@ -1,16 +1,16 @@
 // Param values from https://developer.mozilla.org/Add-ons/WebExtensions/API/contextualIdentities/create
-const FACEBOOK_CONTAINER_NAME = "Facebook";
-const FACEBOOK_CONTAINER_COLOR = "blue";
-const FACEBOOK_CONTAINER_ICON = "briefcase";
-const FACEBOOK_DOMAINS = ["facebook.com", "www.facebook.com", "fb.com"];
+const TWITTER_CONTAINER_NAME = "Twitter";
+const TWITTER_CONTAINER_COLOR = "blue";
+const TWITTER_CONTAINER_ICON = "briefcase";
+const TWITTER_DOMAINS = ["twitter.com", "www.twitter.com", "t.co", "twimg.com"];
 
 const MAC_ADDON_ID = "@testpilot-containers";
 
-let facebookCookieStoreId = null;
+let twitterCookieStoreId = null;
 
-const facebookHostREs = [];
+const twitterHostREs = [];
 
-async function isFacebookAlreadyAssignedInMAC () {
+async function isTwitterAlreadyAssignedInMAC () {
   let macAddonInfo;
   // If the MAC add-on isn't installed, return false
   try {
@@ -18,78 +18,78 @@ async function isFacebookAlreadyAssignedInMAC () {
   } catch (e) {
     return false;
   }
-  let anyFBDomainsAssigned = false;
-  for (let facebookDomain of FACEBOOK_DOMAINS) {
-    const facebookCookieUrl = `https://${facebookDomain}/`;
+  let anyTwitterDomainsAssigned = false;
+  for (let twitterDomain of TWITTER_DOMAINS) {
+    const twitterCookieUrl = `https://${twitterDomain}/`;
     const assignment = await browser.runtime.sendMessage(MAC_ADDON_ID, {
       method: "getAssignment",
-      url: facebookCookieUrl
+      url: twitterCookieUrl
     });
     if (assignment) {
-      anyFBDomainsAssigned = true;
+      anyTwitterDomainsAssigned = true;
     }
   }
-  return anyFBDomainsAssigned;
+  return anyTwitterDomainsAssigned;
 }
 
 (async function init() {
-  const facebookAlreadyAssigned = await isFacebookAlreadyAssignedInMAC();
-  if (facebookAlreadyAssigned) {
+  const twitterAlreadyAssigned = await isTwitterAlreadyAssignedInMAC();
+  if (twitterAlreadyAssigned) {
     return;
   }
 
-  // Clear all facebook cookies
-  for (let facebookDomain of FACEBOOK_DOMAINS) {
-    facebookHostREs.push(new RegExp(`^(.*)?${facebookDomain}$`));
-    const facebookCookieUrl = `https://${facebookDomain}/`;
+  // Clear all twitter cookies
+  for (let twitterDomain of TWITTER_DOMAINS) {
+    twitterHostREs.push(new RegExp(`^(.*\\.)?${twitterDomain}$`)); 
+    const twitterCookieUrl = `https://${twitterDomain}/`;
 
-    browser.cookies.getAll({domain: facebookDomain}).then(cookies => {
+    browser.cookies.getAll({domain: twitterDomain}).then(cookies => {
       for (let cookie of cookies) {
-        browser.cookies.remove({name: cookie.name, url: facebookCookieUrl});
+        browser.cookies.remove({name: cookie.name, url: twitterCookieUrl});
       }
     });
   }
 
-  // Use existing Facebook container, or create one
-  browser.contextualIdentities.query({name: FACEBOOK_CONTAINER_NAME}).then(contexts => {
+  // Use existing Twitter container, or create one
+  browser.contextualIdentities.query({name: TWITTER_CONTAINER_NAME}).then(contexts => {
     if (contexts.length > 0) {
-      facebookCookieStoreId = contexts[0].cookieStoreId;
+      twitterCookieStoreId = contexts[0].cookieStoreId;
     } else {
       browser.contextualIdentities.create({
-        name: FACEBOOK_CONTAINER_NAME,
-        color: FACEBOOK_CONTAINER_COLOR,
-        icon: FACEBOOK_CONTAINER_ICON}
+        name: TWITTER_CONTAINER_NAME,
+        color: TWITTER_CONTAINER_COLOR,
+        icon: TWITTER_CONTAINER_ICON}
       ).then(context => {
-        facebookCookieStoreId = context.cookieStoreId;
+        twitterCookieStoreId = context.cookieStoreId;
       });
     }
   });
 
-  // Listen to requests and open Facebook into its Container,
+  // Listen to requests and open Twitter into its Container,
   // open other sites into the default tab context
-  async function containFacebook(options) {
+  async function containTwitter(options) {
     const requestUrl = new URL(options.url);
-    let isFacebook = false;
-    for (let facebookHostRE of facebookHostREs) {
-      if (facebookHostRE.test(requestUrl.host)) {
-        isFacebook = true;
+    let isTwitter = false;
+    for (let twitterHostRE of twitterHostREs) {
+      if (twitterHostRE.test(requestUrl.host)) {
+        isTwitter = true;
         break;
       }
     }
     const tab = await browser.tabs.get(options.tabId);
     const tabCookieStoreId = tab.cookieStoreId;
-    if (isFacebook) {
-      if (tabCookieStoreId !== facebookCookieStoreId && !tab.incognito) {
-        // See https://github.com/mozilla/contain-facebook/issues/23
-        // Sometimes this add-on is installed but doesn't get a facebookCookieStoreId ?
-        if (facebookCookieStoreId) {
-          browser.tabs.create({url: requestUrl.toString(), cookieStoreId: facebookCookieStoreId});
+    if (isTwitter) {
+      if (tabCookieStoreId !== twitterCookieStoreId && !tab.incognito) {
+        // See https://github.com/mozilla/contain-twitter/issues/23
+        // Sometimes this add-on is installed but doesn't get a twitterCookieStoreId ?
+        if (twitterCookieStoreId) {
+          browser.tabs.create({url: requestUrl.toString(), cookieStoreId: twitterCookieStoreId});
           browser.tabs.remove(options.tabId);
           return {cancel: true};
         }
       }
     } else {
-      if (tabCookieStoreId === facebookCookieStoreId) {
+      if (tabCookieStoreId === twitterCookieStoreId) {
         browser.tabs.create({url: requestUrl.toString()});
         browser.tabs.remove(options.tabId);
         return {cancel: true};
@@ -98,5 +98,5 @@ async function isFacebookAlreadyAssignedInMAC () {
   }
 
   // Add the request listener
-  browser.webRequest.onBeforeRequest.addListener(containFacebook, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"]);
+  browser.webRequest.onBeforeRequest.addListener(containTwitter, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"]);
 })();

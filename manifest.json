@@ -1,9 +1,9 @@
 {
     "manifest_version": 2,
-    "name": "Facebook Container",
-    "version": "1.2.4",
+    "name": "Twitter Container",
+    "version": "1.1",
 
-    "description": "Facebook Container isolates your Facebook activity from the rest of your web activity in order to prevent Facebook from tracking you outside of the Facebook website via third party cookies.",
+    "description": "This addon is an unofficial fork of Mozilla's Facebook Container designed for Twitter. \n Twitter Container isolates your Twitter activity from the rest of your web activity in order to prevent Twitter from tracking you outside of the Twitter website via third party cookies. \n This is not an official Mozilla Product & is in no way related to them.",
 
     "icons": {
         "48": "icon.png",
@@ -12,12 +12,12 @@
 
     "applications": {
       "gecko": {
-        "id": "@contain-facebook",
+        "id": "@contain-twitter",
         "strict_min_version": "57.0"
       }
     },
 
-    "homepage_url": "https://github.com/mozilla/contain-facebook",
+    "homepage_url": "https://github.com/v1shwa/contain-twitter",
 
     "permissions": [
         "<all_urls>",

@@ -2,7 +2,7 @@
 const TWITTER_CONTAINER_NAME = "Twitter";
 const TWITTER_CONTAINER_COLOR = "blue";
 const TWITTER_CONTAINER_ICON = "briefcase";
-const TWITTER_DOMAINS = ["twitter.com", "www.twitter.com", "t.co", "twimg.com"];
+const TWITTER_DOMAINS = ["twitter.com", "www.twitter.com", "t.co", "twimg.com", "mobile.twitter.com", "m.twitter.com"];
 
 const MAC_ADDON_ID = "@testpilot-containers";
 

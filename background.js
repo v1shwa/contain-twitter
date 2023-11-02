@@ -1,9 +1,35 @@
- // Param values from https://developer.mozilla.org/Add-ons/WebExtensions/API/contextualIdentities/create
+// Param values from https://developer.mozilla.org/Add-ons/WebExtensions/API/contextualIdentities/create
 const TWITTER_CONTAINER_NAME = "Twitter";
 const TWITTER_CONTAINER_COLOR = "blue";
 const TWITTER_CONTAINER_ICON = "briefcase";
-const TWITTER_DOMAINS = ["twitter.com", "www.twitter.com", "t.co", "twimg.com", "mobile.twitter.com", "m.twitter.com",
-                         "api.twitter.com", "abs.twimg.com", "ton.twimg.com", "pbs.twimg.com", "tweetdeck.twitter.com"];
+const TWITTER_DOMAINS = [
+  "twitter.com",
+  "www.twitter.com",
+  "t.co",
+  "twimg.com",
+  "mobile.twitter.com",
+  "m.twitter.com",
+  "api.twitter.com",
+  "abs.twimg.com",
+  "ton.twimg.com",
+  "pbs.twimg.com",
+  "tweetdeck.twitter.com",
+  "ads-twitter.com",
+  "periscope.tv",
+  "pscp.tv",
+  "tweetdeck.com",
+  "twitpic.com",
+  "twitter.co",
+  "twitterinc.com",
+  "twitteroauth.com",
+  "twitterstat.us",
+  "twttr.com",
+  "x.com",
+  "mobile.x.com",
+  "m.x.com",
+  "api.x.com",
+  "abs.twimg.com",
+  "tweetdeck.x.com"];
 
 const MAC_ADDON_ID = "@testpilot-containers";
 
@@ -14,7 +40,7 @@ let twitterCookiesCleared = false;
 const canceledRequests = {};
 const twitterHostREs = [];
 
-async function isMACAddonEnabled () {
+async function isMACAddonEnabled() {
   try {
     const macAddonInfo = await browser.management.get(MAC_ADDON_ID);
     if (macAddonInfo.enabled) {
@@ -26,7 +52,7 @@ async function isMACAddonEnabled () {
   return false;
 }
 
-async function setupMACAddonManagementListeners () {
+async function setupMACAddonManagementListeners() {
   browser.management.onInstalled.addListener(info => {
     if (info.id === MAC_ADDON_ID) {
       macAddonEnabled = true;
@@ -49,7 +75,7 @@ async function setupMACAddonManagementListeners () {
   })
 }
 
-async function getMACAssignment (url) {
+async function getMACAssignment(url) {
   try {
     const assignment = await browser.runtime.sendMessage(MAC_ADDON_ID, {
       method: "getAssignment",
@@ -61,7 +87,7 @@ async function getMACAssignment (url) {
   }
 }
 
-function cancelRequest (tab, options) {
+function cancelRequest(tab, options) {
   // we decided to cancel the request at this point, register canceled request
   canceledRequests[tab.id] = {
     requestIds: {
@@ -82,14 +108,14 @@ function cancelRequest (tab, options) {
   }, 2000);
 }
 
-function shouldCancelEarly (tab, options) {
+function shouldCancelEarly(tab, options) {
   // we decided to cancel the request at this point
   if (!canceledRequests[tab.id]) {
     cancelRequest(tab, options);
   } else {
     let cancelEarly = false;
     if (canceledRequests[tab.id].requestIds[options.requestId] ||
-        canceledRequests[tab.id].urls[options.url]) {
+      canceledRequests[tab.id].urls[options.url]) {
       // same requestId or url from the same tab
       // this is a redirect that we have to cancel early to prevent opening two tabs
       cancelEarly = true;
@@ -104,13 +130,13 @@ function shouldCancelEarly (tab, options) {
   return false;
 }
 
-function generateTwitterHostREs () {
+function generateTwitterHostREs() {
   for (let twitterDomain of TWITTER_DOMAINS) {
     twitterHostREs.push(new RegExp(`^(.*\\.)?${twitterDomain}$`));
   }
 }
 
-async function clearTwitterCookies () {
+async function clearTwitterCookies() {
   // Clear all twitter cookies
   const containers = await browser.contextualIdentities.query({});
   containers.push({
@@ -142,9 +168,9 @@ async function clearTwitterCookies () {
   });
 }
 
-async function setupContainer () {
+async function setupContainer() {
   // Use existing Twitter container, or create one
-  const contexts = await browser.contextualIdentities.query({name: TWITTER_CONTAINER_NAME})
+  const contexts = await browser.contextualIdentities.query({ name: TWITTER_CONTAINER_NAME })
   if (contexts.length > 0) {
     twitterCookieStoreId = contexts[0].cookieStoreId;
   } else {
@@ -157,7 +183,7 @@ async function setupContainer () {
   }
 }
 
-async function containTwitter (options) {
+async function containTwitter(options) {
   // Listen to requests and open Twitter into its Container,
   // open other sites into the default tab context
   const requestUrl = new URL(options.url);
@@ -188,7 +214,7 @@ async function containTwitter (options) {
       // Sometimes this add-on is installed but doesn't get a twitterCookieStoreId ?
       if (twitterCookieStoreId) {
         if (shouldCancelEarly(tab, options)) {
-          return {cancel: true};
+          return { cancel: true };
         }
         browser.tabs.create({
           url: requestUrl.toString(),
@@ -198,13 +224,13 @@ async function containTwitter (options) {
           windowId: tab.windowId
         });
         browser.tabs.remove(options.tabId);
-        return {cancel: true};
+        return { cancel: true };
       }
     }
   } else {
     if (tabCookieStoreId === twitterCookieStoreId) {
       if (shouldCancelEarly(tab, options)) {
-        return {cancel: true};
+        return { cancel: true };
       }
       browser.tabs.create({
         url: requestUrl.toString(),
@@ -213,7 +239,7 @@ async function containTwitter (options) {
         windowId: tab.windowId
       });
       browser.tabs.remove(options.tabId);
-      return {cancel: true};
+      return { cancel: true };
     }
   }
 }
@@ -227,17 +253,17 @@ async function containTwitter (options) {
   generateTwitterHostREs();
 
   // Add the request listener
-  browser.webRequest.onBeforeRequest.addListener(containTwitter, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"]);
+  browser.webRequest.onBeforeRequest.addListener(containTwitter, { urls: ["<all_urls>"], types: ["main_frame"] }, ["blocking"]);
 
   // Clean up canceled requests
   browser.webRequest.onCompleted.addListener((options) => {
     if (canceledRequests[options.tabId]) {
-     delete canceledRequests[options.tabId];
+      delete canceledRequests[options.tabId];
     }
-  },{urls: ["<all_urls>"], types: ["main_frame"]});
+  }, { urls: ["<all_urls>"], types: ["main_frame"] });
   browser.webRequest.onErrorOccurred.addListener((options) => {
     if (canceledRequests[options.tabId]) {
       delete canceledRequests[options.tabId];
     }
-  },{urls: ["<all_urls>"], types: ["main_frame"]});
+  }, { urls: ["<all_urls>"], types: ["main_frame"] });
 })();

@@ -3,33 +3,18 @@ const TWITTER_CONTAINER_NAME = "Twitter";
 const TWITTER_CONTAINER_COLOR = "blue";
 const TWITTER_CONTAINER_ICON = "briefcase";
 const TWITTER_DOMAINS = [
-  "twitter.com",
-  "www.twitter.com",
+  "x.com",
+  "www.x.com",
   "t.co",
   "twimg.com",
-  "mobile.twitter.com",
-  "m.twitter.com",
-  "api.twitter.com",
-  "abs.twimg.com",
-  "ton.twimg.com",
-  "pbs.twimg.com",
-  "tweetdeck.twitter.com",
-  "ads-twitter.com",
-  "periscope.tv",
-  "pscp.tv",
-  "tweetdeck.com",
-  "twitpic.com",
-  "twitter.co",
-  "twitterinc.com",
-  "twitteroauth.com",
-  "twitterstat.us",
-  "twttr.com",
-  "x.com",
   "mobile.x.com",
   "m.x.com",
   "api.x.com",
   "abs.twimg.com",
-  "tweetdeck.x.com"];
+  "ton.twimg.com",
+  "pbs.twimg.com",
+  "tweetdeck.x.com",
+];
 
 const MAC_ADDON_ID = "@testpilot-containers";
 
@@ -53,33 +38,33 @@ async function isMACAddonEnabled() {
 }
 
 async function setupMACAddonManagementListeners() {
-  browser.management.onInstalled.addListener(info => {
+  browser.management.onInstalled.addListener((info) => {
     if (info.id === MAC_ADDON_ID) {
       macAddonEnabled = true;
     }
   });
-  browser.management.onUninstalled.addListener(info => {
+  browser.management.onUninstalled.addListener((info) => {
     if (info.id === MAC_ADDON_ID) {
       macAddonEnabled = false;
     }
-  })
-  browser.management.onEnabled.addListener(info => {
+  });
+  browser.management.onEnabled.addListener((info) => {
     if (info.id === MAC_ADDON_ID) {
       macAddonEnabled = true;
     }
-  })
-  browser.management.onDisabled.addListener(info => {
+  });
+  browser.management.onDisabled.addListener((info) => {
     if (info.id === MAC_ADDON_ID) {
       macAddonEnabled = false;
     }
-  })
+  });
 }
 
 async function getMACAssignment(url) {
   try {
     const assignment = await browser.runtime.sendMessage(MAC_ADDON_ID, {
       method: "getAssignment",
-      url
+      url,
     });
     return assignment;
   } catch (e) {
@@ -91,11 +76,11 @@ function cancelRequest(tab, options) {
   // we decided to cancel the request at this point, register canceled request
   canceledRequests[tab.id] = {
     requestIds: {
-      [options.requestId]: true
+      [options.requestId]: true,
     },
     urls: {
-      [options.url]: true
-    }
+      [options.url]: true,
+    },
   };
 
   // since webRequest onCompleted and onErrorOccurred are not 100% reliable
@@ -114,8 +99,10 @@ function shouldCancelEarly(tab, options) {
     cancelRequest(tab, options);
   } else {
     let cancelEarly = false;
-    if (canceledRequests[tab.id].requestIds[options.requestId] ||
-      canceledRequests[tab.id].urls[options.url]) {
+    if (
+      canceledRequests[tab.id].requestIds[options.requestId] ||
+      canceledRequests[tab.id].urls[options.url]
+    ) {
       // same requestId or url from the same tab
       // this is a redirect that we have to cancel early to prevent opening two tabs
       cancelEarly = true;
@@ -140,28 +127,28 @@ async function clearTwitterCookies() {
   // Clear all twitter cookies
   const containers = await browser.contextualIdentities.query({});
   containers.push({
-    cookieStoreId: 'firefox-default'
+    cookieStoreId: "firefox-default",
   });
-  containers.map(container => {
+  containers.map((container) => {
     const storeId = container.cookieStoreId;
     if (storeId === twitterCookieStoreId) {
       // Don't clear cookies in the Twitter Container
       return;
     }
 
-    TWITTER_DOMAINS.map(async twitterDomain => {
+    TWITTER_DOMAINS.map(async (twitterDomain) => {
       const twitterCookieUrl = `https://${twitterDomain}/`;
 
       const cookies = await browser.cookies.getAll({
         domain: twitterDomain,
-        storeId
+        storeId,
       });
 
-      cookies.map(cookie => {
+      cookies.map((cookie) => {
         browser.cookies.remove({
           name: cookie.name,
           url: twitterCookieUrl,
-          storeId
+          storeId,
         });
       });
     });
@@ -170,15 +157,17 @@ async function clearTwitterCookies() {
 
 async function setupContainer() {
   // Use existing Twitter container, or create one
-  const contexts = await browser.contextualIdentities.query({ name: TWITTER_CONTAINER_NAME })
+  const contexts = await browser.contextualIdentities.query({
+    name: TWITTER_CONTAINER_NAME,
+  });
   if (contexts.length > 0) {
     twitterCookieStoreId = contexts[0].cookieStoreId;
   } else {
     const context = await browser.contextualIdentities.create({
       name: TWITTER_CONTAINER_NAME,
       color: TWITTER_CONTAINER_COLOR,
-      icon: TWITTER_CONTAINER_ICON
-    })
+      icon: TWITTER_CONTAINER_ICON,
+    });
     twitterCookieStoreId = context.cookieStoreId;
   }
 }
@@ -221,7 +210,7 @@ async function containTwitter(options) {
           cookieStoreId: twitterCookieStoreId,
           active: tab.active,
           index: tab.index,
-          windowId: tab.windowId
+          windowId: tab.windowId,
         });
         browser.tabs.remove(options.tabId);
         return { cancel: true };
@@ -236,7 +225,7 @@ async function containTwitter(options) {
         url: requestUrl.toString(),
         active: tab.active,
         index: tab.index,
-        windowId: tab.windowId
+        windowId: tab.windowId,
       });
       browser.tabs.remove(options.tabId);
       return { cancel: true };
@@ -253,17 +242,27 @@ async function containTwitter(options) {
   generateTwitterHostREs();
 
   // Add the request listener
-  browser.webRequest.onBeforeRequest.addListener(containTwitter, { urls: ["<all_urls>"], types: ["main_frame"] }, ["blocking"]);
+  browser.webRequest.onBeforeRequest.addListener(
+    containTwitter,
+    { urls: ["<all_urls>"], types: ["main_frame"] },
+    ["blocking"]
+  );
 
   // Clean up canceled requests
-  browser.webRequest.onCompleted.addListener((options) => {
-    if (canceledRequests[options.tabId]) {
-      delete canceledRequests[options.tabId];
-    }
-  }, { urls: ["<all_urls>"], types: ["main_frame"] });
-  browser.webRequest.onErrorOccurred.addListener((options) => {
-    if (canceledRequests[options.tabId]) {
-      delete canceledRequests[options.tabId];
-    }
-  }, { urls: ["<all_urls>"], types: ["main_frame"] });
+  browser.webRequest.onCompleted.addListener(
+    (options) => {
+      if (canceledRequests[options.tabId]) {
+        delete canceledRequests[options.tabId];
+      }
+    },
+    { urls: ["<all_urls>"], types: ["main_frame"] }
+  );
+  browser.webRequest.onErrorOccurred.addListener(
+    (options) => {
+      if (canceledRequests[options.tabId]) {
+        delete canceledRequests[options.tabId];
+      }
+    },
+    { urls: ["<all_urls>"], types: ["main_frame"] }
+  );
 })();

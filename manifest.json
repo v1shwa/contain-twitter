@@ -10,7 +10,7 @@
         "96": "icon@2x.png"
     },
 
-    "applications": {
+    "browser_specific_settings": {
       "gecko": {
         "id": "@contain-twitter",
         "strict_min_version": "57.0"

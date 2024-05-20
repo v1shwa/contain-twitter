@@ -14,6 +14,12 @@ const TWITTER_DOMAINS = [
   "ton.twimg.com",
   "pbs.twimg.com",
   "tweetdeck.x.com",
+  "twitter.com",
+  "www.twitter.com",
+  "mobile.twitter.com",
+  "m.twitter.com",
+  "api.twitter.com",
+  "tweetdeck.twitter.com"
 ];
 
 const MAC_ADDON_ID = "@testpilot-containers";

@@ -1,35 +1,31 @@
 {
-    "manifest_version": 2,
-    "name": "Twitter Container",
-    "version": "1.3.2",
-
-    "description": "This addon is an unofficial fork of Mozilla's Facebook Container designed for Twitter. \n Twitter Container isolates your Twitter activity from the rest of your web activity in order to prevent Twitter from tracking you outside of the Twitter website via third party cookies. \n This is not an official Mozilla Product & is in no way related to them.",
-
-    "icons": {
-        "48": "icon.png",
-        "96": "icon@2x.png"
-    },
-
-    "browser_specific_settings": {
-      "gecko": {
-        "id": "@contain-twitter",
-        "strict_min_version": "57.0"
-      }
-    },
-
-    "homepage_url": "https://github.com/v1shwa/contain-twitter",
-
-    "permissions": [
-        "<all_urls>",
-        "contextualIdentities",
-        "cookies",
-        "management",
-        "tabs",
-        "webRequestBlocking",
-        "webRequest"
-    ],
-
-    "background": {
-        "scripts": ["background.js"]
+  "manifest_version": 2,
+  "name": "Twitter Container",
+  "version": "1.3.3",
+  "description": "This addon is an unofficial fork of Mozilla's Facebook Container designed for Twitter. \n Twitter Container isolates your Twitter activity from the rest of your web activity in order to prevent Twitter from tracking you outside of the Twitter website via third party cookies. \n This is not an official Mozilla Product & is in no way related to them.",
+  "icons": {
+    "48": "icon.png",
+    "96": "icon@2x.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "@contain-twitter",
+      "strict_min_version": "57.0"
     }
+  },
+  "homepage_url": "https://github.com/v1shwa/contain-twitter",
+  "permissions": [
+    "<all_urls>",
+    "contextualIdentities",
+    "cookies",
+    "management",
+    "tabs",
+    "webRequestBlocking",
+    "webRequest"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  }
 }
